@@ -7,7 +7,7 @@ exports.getTodos = (req, res) => {
     let params = [];
 
     if (userId) {
-        sql += ' WHERE user_id = ?';
+        sql += ' WHERE userId = ?';
         params.push(userId);
     }
 
@@ -24,65 +24,68 @@ exports.getTodos = (req, res) => {
 };
 
 exports.createTodo = (req, res) => {
-    const { user_id, title, completed } = req.body;
+    const { userId, title, completed } = req.body;
 
-    if (!user_id || !title) {
-        return res.status(400).json({ message: 'user_id and title are required' });
+    if (!userId || !title) {
+        return res.status(400).json({ message: 'userId and title are required' });
     }
 
     const sql = `
-        INSERT INTO todos (user_id, title, completed)
+        INSERT INTO todos (userId, title, completed)
         VALUES (?, ?, ?)
     `;
 
-    db.query(sql, [user_id, title, completed || false], (err, result) => {
+    db.query(sql, [userId, title, completed || false], (err, result) => {
         if (err) {
             console.error(err);
             return res.status(500).json({ message: 'Database error' });
         }
 
         res.status(201).json({
-            message: 'Todo created successfully',
-            todo: {
                 id: result.insertId,
-                user_id,
+                userId,
                 title,
-                completed: completed || false
-            }
-        });
+                completed: completed || false});
     });
 };
 
 exports.updateTodo = (req, res) => {
     const { id } = req.params;
-    const { title, completed } = req.body;
+    const { userId,title, completed } = req.body;
 
     const sql = `
         UPDATE todos
         SET title = ?, completed = ?
         WHERE id = ?
+        AND userId=?
     `;
 
-    db.query(sql, [title, completed, id], (err, result) => {
+    db.query(sql, [title, completed, id,userId], (err, result) => {
         if (err) {
             console.error(err);
             return res.status(500).json({ message: 'Database error' });
         }
 
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'Todo not found' });
+        db.query('SELECT * FROM todos WHERE id = ? AND userId=?', [id,userId], (err2, rows) => {
+        if (err2) {
+          console.error(err2);
+          return res.status(500).json({ message: 'Database error' });
         }
-
-        res.json({ message: 'Todo updated successfully' });
+        if (rows.length === 0) {
+          return res.status(404).json({ message: 'Todo not found' });
+        }
+        res.json(rows[0]);
+      });
     });
 };
 
 exports.deleteTodo = (req, res) => {
     const { id } = req.params;
+    const {userId}=req.body;
 
-    const sql = 'DELETE FROM todos WHERE id = ?';
+    const sql = 'DELETE FROM todos WHERE id = ? AND userId=?';
 
-    db.query(sql, [id], (err, result) => {
+    db.query(sql, [id,userId], (err, result) => {
         if (err) {
             console.error(err);
             return res.status(500).json({ message: 'Database error' });

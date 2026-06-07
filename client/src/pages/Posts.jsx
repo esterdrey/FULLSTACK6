@@ -3,6 +3,7 @@ import {  useLoaderData } from 'react-router-dom';
 import { useCurrentUser } from '../UserContext';
 import Post from '../components/Post.jsx';
 import styles from './Posts.module.css';
+
 export const loader= async ({params})=>{
     try{
         const res= await fetch(`http://localhost:3000/posts?userId=${params.userId}`);
@@ -40,15 +41,18 @@ function Posts(){
 
   const handleAddPost = async (e) => {
     e.preventDefault();
+    if (!newPost.title.trim() || !newPost.body.trim()) return;
+
     try{
         const res=await fetch('http://localhost:3000/posts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newPost)
+            body: JSON.stringify({ ...newPost, userId: currentUser.id })
         });
+        if (!res.ok) throw new Error('Failed to add post');
         const createdPost = await res.json();
-        setPosts(prevPosts => [...prevPosts, createdPost]);
-        // Update the posts list with the new post
+        setPosts(prev => [...prev, createdPost]);
+        setNewPost({ title: '', body: '' }); // reset the form after posting
     } catch (error) {
         console.error('Error adding post:', error);
     }
@@ -75,6 +79,33 @@ function Posts(){
 
 
     return (
+    <>
+    <div className={styles.createPost}>
+        <form onSubmit={handleAddPost} className={styles.createForm}>
+          <input
+            className={styles.createTitle}
+            value={newPost.title}
+            onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
+            placeholder="Title"
+          />
+          <textarea
+            className={styles.createBody}
+            value={newPost.body}
+            onChange={(e) => setNewPost({ ...newPost, body: e.target.value })}
+            placeholder="What's on your mind?"
+          />
+          <button
+            type="submit"
+            className={styles.createButton}
+            disabled={!newPost.title.trim() || !newPost.body.trim()}
+          >
+            Post
+          </button>
+        </form>
+      </div>
+
+
+    
     <div className={styles['posts-container']}>
       {posts?.map(post => (
         <Post key={post.id} 
@@ -86,6 +117,7 @@ function Posts(){
          />
       ))}
     </div>
+    </>
    
   );
 
