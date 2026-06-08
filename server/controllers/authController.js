@@ -21,7 +21,7 @@ exports.register = (req, res) => {
         const userId = result.insertId;
 
         const insertPasswordSql = `
-            INSERT INTO user_passwords (user_id, password)
+            INSERT INTO user_passwords (userId, password)
             VALUES (?, ?)
         `;
 
@@ -52,7 +52,7 @@ exports.login = (req, res) => {
     const sql = `
         SELECT users.id, users.name, users.username, users.email, users.phone, users.website
         FROM users
-        JOIN user_passwords ON users.id = user_passwords.user_id
+        JOIN user_passwords ON users.id = user_passwords.userId
         WHERE users.username = ? AND user_passwords.password = ?
     `;
 
