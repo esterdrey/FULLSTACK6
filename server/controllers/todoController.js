@@ -1,17 +1,17 @@
 const db = require('../db');
 
 exports.getTodos = (req, res) => {
-    const { userId } = req.query;
+    const { username } = req.query;
 
-    let sql = 'SELECT * FROM todos';
+    let sql = 'SELECT todos.* FROM todos JOIN users ON users.id=todos.userId';
     let params = [];
 
-    if (userId) {
-        sql += ' WHERE userId = ?';
-        params.push(userId);
+    if (username) {
+        sql += ' WHERE username = ?';
+        params.push(username);
     }
 
-    sql += ' ORDER BY id';
+    sql += ' ORDER BY todos.id';
 
     db.query(sql, params, (err, results) => {
         if (err) {

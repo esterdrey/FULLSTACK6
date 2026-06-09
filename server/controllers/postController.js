@@ -3,8 +3,14 @@ const db=require('../db');
 exports.getAllPosts=(req,res)=>
 
     {
-        const {userId}=req.query;
-        db.query('SELECT posts.*, users.username, users.email FROM posts JOIN users ON users.id=posts.userId WHERE userId=?',[userId],(err,results)=>{
+        const {username}=req.query;
+        let sql='SELECT posts.*, users.username, users.email FROM posts JOIN users ON users.id=posts.userId ';
+        let queryParams = [];
+        if(username){
+            sql += ' WHERE users.username = ?';
+            queryParams.push(username);
+        }
+        db.query(sql,queryParams,(err,results)=>{
             if(err)
             {
                 console.error('Error fetching posts:',err);
@@ -62,7 +68,7 @@ exports.getPostById=(req,res)=>{
             if(err)
             {
                 console.error('Error creating post:',err);
-                res.status(500).json({error:'Failed to create post'});
+                return res.status(500).json({error:'Failed to create post'});
             }
             db.query(
         `SELECT posts.*, users.username, users.email
@@ -91,7 +97,10 @@ exports.updatePost=(req,res)=>{
         if(err)
         {
             console.error('Error updating post:',err);
-            res.status(500).json({error:'Failed to update post'});
+            return res.status(500).json({error:'Failed to update post'});
+        }
+        if (result.affectedRows === 0) {
+            return res.status(403).json({ error: 'Action forbidden: post not found or belongs to another user.' });
         }
          db.query(
         `SELECT posts.*, users.username, users.email
@@ -99,11 +108,10 @@ exports.updatePost=(req,res)=>{
          WHERE posts.id = ? AND posts.userId = ?`,
         [id, userId],
         (err2, rows) => {
-          if (err2) return res.status(500).json({ error: 'Failed to fetch updated post' });
-          if (rows.length === 0) {
-            return res.status(403).json({ error: 'Action forbidden: post not found or belongs to another user.' });
-          }
-          res.json(rows[0]);
+        if (err2 || rows.length === 0) {
+            return res.status(500).json({ error: 'Failed to fetch updated post details' });
+        }
+        res.json(rows[0]);
         }
       );
     });

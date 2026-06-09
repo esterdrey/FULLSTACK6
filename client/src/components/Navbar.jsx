@@ -24,8 +24,9 @@ function Navbar() {
 
         <div className={styles.links}>
           <NavLink to="/home">Home</NavLink>
-          <NavLink to={`/users/${currentUser.id}/todos`}>Todos</NavLink>
-          <NavLink to={`/users/${currentUser.id}/posts`}>Posts</NavLink>
+          <NavLink to={`/users/${currentUser.username}/todos`}>Todos</NavLink>
+          <NavLink to={`/users/${currentUser.username}/posts`}>Posts</NavLink>
+          <NavLink to={`/users/${currentUser.username}/albums`}>Albums</NavLink>
 
           <button onClick={() => setShowInfo(true)}>Info</button>
           <button onClick={logout}>Logout</button>

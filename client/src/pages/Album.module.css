@@ -1,0 +1,216 @@
+.container {
+  max-width: 900px;
+  margin: 90px auto 40px;
+  padding: 0 20px;
+  font-family: -apple-system, system-ui, sans-serif;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #1e293b;
+  text-transform: capitalize;
+}
+
+.addPhotoBtn {
+  border: none;
+  background: #6366f1;
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.addPhotoBtn:hover {
+  background: #4f46e5;
+}
+
+/* ── Grid ── */
+.photoGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 600px) {
+  .photoGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ── Photo card ── */
+.photoCard {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.photoCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.09);
+}
+
+.thumbnail {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+}
+
+.photoInfo {
+  padding: 8px 10px 4px;
+}
+
+.photoInfo p {
+  margin: 0;
+  font-size: 12px;
+  color: #475569;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.photoInfo input {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+  text-align: center;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.photoInfo input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* ── Card action buttons (Edit / Delete / Save / Cancel) ── */
+.cardActions {
+  display: flex;
+  gap: 6px;
+  padding: 6px 10px 10px;
+}
+
+.cardActions button {
+  flex: 1;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  border-radius: 7px;
+  padding: 5px 0;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.cardActions button:hover {
+  background: #eef2ff;
+  border-color: #6366f1;
+  color: #6366f1;
+}
+
+/* ── Add-photo form card (inside grid) ── */
+.formCard {
+  border-style: dashed;
+  overflow: visible;
+}
+
+.formCard form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.previewContainer {
+  position: relative;
+}
+
+.rerollBtn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  border: none;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.rerollBtn:hover {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.formCard input[type="text"] {
+  width: 100%;
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+  text-align: center;
+  transition: border-color 0.2s;
+  color: #1e293b;
+}
+
+.formCard input[type="text"]:focus {
+  border-color: #6366f1;
+}
+
+.saveBtn {
+  width: 100%;
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  background: #6366f1;
+  color: #fff;
+  padding: 8px 0;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.saveBtn:hover {
+  background: #4f46e5;
+}
+
+/* ── Empty state ── */
+.emptyMessage {
+  color: #94a3b8;
+  font-size: 14px;
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 0;
+}

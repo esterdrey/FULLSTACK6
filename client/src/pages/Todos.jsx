@@ -6,9 +6,12 @@ import { useState } from "react";
 
 const API = 'http://localhost:3000/todos';
 
-export const loader=async ({params})=>{
+export const loader=async ()=>{
+    const currentUser=JSON.parse(localStorage.getItem("currentUser"));
+    if (!currentUser) return [];
+
     try{
-        const res=await fetch(`${API}?userId=${params.userId}`);
+        const res=await fetch(`${API}?userId=${currentUser}`);
         if(!res.ok)throw new Error('Failed to fetch todos');
         return res.json(); 
     }

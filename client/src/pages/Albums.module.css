@@ -1,0 +1,152 @@
+.container {
+  max-width: 800px;
+  margin: 90px auto 40px;
+  padding: 0 20px;
+  font-family: -apple-system, system-ui, sans-serif;
+}
+
+.container h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 16px;
+}
+
+.addAlbumBtn {
+  border: none;
+  background: #6366f1;
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+  margin-bottom: 24px;
+  display: inline-block;
+}
+
+.addAlbumBtn:hover {
+  background: #4f46e5;
+}
+
+.albumGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); 
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .albumGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.albumCard {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 24px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  transition: transform 0.15s, box-shadow 0.15s;
+  text-align: center;
+  justify-content: space-between;
+  aspect-ratio: 1 / 1; 
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.albumCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.09);
+}
+
+.albumLink, .albumFormContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: inherit;
+  width: 100%;
+}
+
+.albumLink h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  word-break: break-word;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px 8px;
+  text-align: center;
+}
+
+.folderIcon {
+  font-size: 52px;
+  line-height: 1;
+}
+
+.editInput {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  text-align: center;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.editInput:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.cardActions {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  justify-content: center;
+}
+
+.cardActions button {
+  flex: 1;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  border-radius: 7px;
+  padding: 5px 0;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.cardActions button:hover {
+  background: #eef2ff;
+  border-color: #6366f1;
+  color: #6366f1;
+}
+
+.inlineForm {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;
+  align-items: center;
+}
+
+.formCard {
+  border-style: dashed;
+}

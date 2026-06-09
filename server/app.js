@@ -6,6 +6,8 @@ const authRoutes = require('./routes/authRoutes');
 const todoRoutes = require('./routes/todoRoutes');
 const postRoutes = require('./routes/postRoutes');
 const commentRoutes = require('./routes/commentRoutes');
+const albumRoutes=require('./routes/albumRoutes');
+const photoRoutes=require('./routes/photoRoutes');
 
 const app = express();
 
@@ -16,6 +18,8 @@ app.use('/', authRoutes);
 app.use('/', todoRoutes);
 app.use('/posts', postRoutes);
 app.use('/comments', commentRoutes);
+app.use('/albums',albumRoutes);
+app.use('/photos',photoRoutes);
 
 app.get('/', (req, res) => {
     res.send('Server + MySQL Working!');

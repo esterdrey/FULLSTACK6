@@ -60,8 +60,9 @@ exports.createComment=(req,res)=>{
         [result.insertId],
         (err2, rows) => {
         if (err2 || rows.length === 0) {
-            return res.status(201).json({ id: result.insertId, postId, userId, body });
-        }
+              console.error('Error fetching new comment data:', err2);
+            return res.status(500).json({ error: 'Comment created, but failed to fetch confirmation' });
+            }
         res.status(201).json(rows[0]);
             }
         );

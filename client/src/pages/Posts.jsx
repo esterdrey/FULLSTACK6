@@ -4,9 +4,11 @@ import { useCurrentUser } from '../UserContext';
 import Post from '../components/Post.jsx';
 import styles from './Posts.module.css';
 
-export const loader= async ({params})=>{
+export const loader= async ()=>{
+  const currentUser=JSON.parse(localStorage.getItem("currentUser"));
+    if (!currentUser) return [];
     try{
-        const res= await fetch(`http://localhost:3000/posts?userId=${params.userId}`);
+        const res= await fetch(`http://localhost:3000/posts?userId=${currentUser.id}`);
         if(!res.ok) throw new Error('Failed to fetch posts');
         return res.json();
     }
@@ -22,7 +24,6 @@ function Posts(){
     const currentUser=useCurrentUser();
     const initialPosts = useLoaderData();
     const [posts, setPosts] = useState(initialPosts || []);
-    const user=useCurrentUser();
 
   const [expandedPostId, setExpandedPostId] = useState(null);
   const [newPost, setNewPost] = useState({title:'', body:''});
