@@ -50,7 +50,7 @@ exports.login = (req, res) => {
     const { username, password } = req.body;
 
     const sql = `
-        SELECT users.id, users.name, users.username, users.email, users.phone, users.website
+        SELECT users.id, users.name, users.username, users.email, users.phone, users.website, users.blocked
         FROM users
         JOIN user_passwords ON users.id = user_passwords.userId
         WHERE users.username = ? AND user_passwords.password = ?
@@ -65,6 +65,10 @@ exports.login = (req, res) => {
         if (results.length === 0) {
             return res.status(401).json({ message: 'Invalid username or password' });
         }
+
+        if (results[0].blocked) {
+            return res.status(403).json({ message: 'This user is blocked' });
+}
 
         res.json({
             message: 'Login successful',

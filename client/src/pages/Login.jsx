@@ -18,10 +18,19 @@ export async function action({ request }) {
   const data = await res.json();
 
   if (!res.ok) {
-    return { error_msg: data.message || "Invalid username or password" };
+    return {
+      error_msg: data.message || "Invalid username or password",
+    };
+  }
+
+  if (data.user.blocked === 1 || data.user.blocked === true) {
+    return {
+      error_msg: "This user has been blocked.",
+    };
   }
 
   localStorage.setItem("currentUser", JSON.stringify(data.user));
+
   return redirect("/home");
 }
 

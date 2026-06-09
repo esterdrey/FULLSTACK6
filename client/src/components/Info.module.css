@@ -1,5 +1,3 @@
-/* ---------- Overlay ---------- */
-
 .overlay {
   position: fixed;
   inset: 0;
@@ -10,8 +8,6 @@
   z-index: 999;
 }
 
-/* ---------- Modal ---------- */
-
 .modal {
   width: 600px;
   max-width: 90%;
@@ -19,79 +15,146 @@
   border-radius: 15px;
   padding: 35px;
   position: relative;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
   animation: popup 0.25s ease;
 }
 
-@keyframes popup{
-  from{
-    opacity:0;
-    transform:translateY(20px);
+@keyframes popup {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
-  to{
-    opacity:1;
-    transform:translateY(0);
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* ---------- Close Button ---------- */
-
-.closeBtn{
-  position:absolute;
-  top:15px;
-  right:15px;
-  width:35px;
-  height:35px;
-  border:none;
-  border-radius:50%;
-  background:#f2f2f2;
-  cursor:pointer;
-  font-size:18px;
-  transition:.2s;
+.closeBtn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 35px;
+  height: 35px;
+  border: none;
+  border-radius: 50%;
+  background: #f2f2f2;
+  cursor: pointer;
+  font-size: 18px;
+  transition: 0.2s;
 }
 
-.closeBtn:hover{
-  background:#e0e0e0;
+.closeBtn:hover {
+  background: #e0e0e0;
 }
 
-/* ---------- Title ---------- */
-
-.mainTitle{
-  text-align:center;
-  margin-top:0;
-  margin-bottom:30px;
-  color:#222;
-  font-size:30px;
+.mainTitle {
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 30px;
+  color: #222;
+  font-size: 30px;
 }
 
-/* ---------- Content ---------- */
-
-.infos{
-  display:flex;
-  justify-content:center;
+.infos {
+  display: flex;
+  justify-content: center;
 }
 
-.section{
-  width:100%;
-  background:#fafafa;
-  border:1px solid #e5e5e5;
-  border-radius:10px;
-  padding:25px;
+.section {
+  width: 100%;
+  background: #fafafa;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  padding: 25px;
 }
 
-.sectionTitle{
-  margin-top:0;
-  margin-bottom:20px;
-  color:#2563eb;
-  font-size:22px;
+.sectionTitle {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #2563eb;
+  font-size: 22px;
 }
 
-.section p{
-  margin:12px 0;
-  font-size:16px;
-  color:#444;
+.section p {
+  margin: 12px 0;
+  font-size: 16px;
+  color: #444;
 }
 
-.section strong{
-  color:#111;
+.section strong {
+  color: #111;
 }
+
+.label {
+  display: block;
+  margin-top: 12px;
+  margin-bottom: 5px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  margin: 6px 0 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 15px;
+  box-sizing: border-box;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+.editBtn,
+.saveBtn,
+.cancelBtn,
+.dangerBtn {
+  min-width: 150px;
+  height: 42px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.editBtn,
+.saveBtn {
+  background: #2563eb;
+  color: white;
+}
+
+.editBtn:hover,
+.saveBtn:hover {
+  background: #1d4ed8;
+}
+
+.cancelBtn {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.cancelBtn:hover {
+  background: #d1d5db;
+}
+
+.dangerBtn {
+  background: #dc2626;
+  color: white;
+}
+
+.dangerBtn:hover {
+  background: #b91c1c;
+} 
