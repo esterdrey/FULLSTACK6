@@ -1,113 +1,206 @@
-const db=require('../db');
+const db = require('../db');
 
 exports.getAllComments = (req, res) => {
-    const { postId } = req.query; 
-    
-    let sql = 'SELECT comments.*,users.username,users.email FROM comments JOIN users ON comments.userId = users.id';
-    let params = [];
+    const {
+        postId,
+        userId,
+        q,
+        sort = "id",
+        order = "ASC"
+    } = req.query;
+
+    let sql = `
+        SELECT comments.*, users.username, users.email
+        FROM comments
+        JOIN users ON comments.userId = users.id
+        WHERE 1=1
+    `;
+
+    const params = [];
 
     if (postId) {
-        sql += ' WHERE comments.postId = ?';
-        params = [postId];
+        sql += " AND comments.postId = ?";
+        params.push(postId);
     }
-    sql += ' ORDER BY comments.id ASC';
+
+    if (userId) {
+        sql += " AND comments.userId = ?";
+        params.push(userId);
+    }
+
+    if (q) {
+        sql += " AND (comments.title LIKE ? OR comments.body LIKE ?)";
+        params.push(`%${q}%`, `%${q}%`);
+    }
+
+    const allowedSort = ["id", "title"];
+    const sortField = allowedSort.includes(sort) ? sort : "id";
+    const sortOrder = order.toUpperCase() === "DESC" ? "DESC" : "ASC";
+
+    sql += ` ORDER BY comments.${sortField} ${sortOrder}`;
 
     db.query(sql, params, (err, results) => {
         if (err) {
-            console.error('Error fetching comments:', err);
-            return res.status(500).json({ error: 'Failed to fetch comments' });  
+            console.error("Error fetching comments:", err);
+            return res.status(500).json({ error: "Failed to fetch comments" });
         }
+
         res.json(results);
     });
-}
+};
 
-exports.getCommentById=(req,res)=>{
-    const {id}=req.params;
-    db.query('SELECT * FROM comments WHERE id=?',[id],(err,results)=>{
-        if(err)
-        {
-            console.error('Error fetching comment:',err);
-            res.status(500).json({error:'Failed to fetch comment'});  
-        }   
-        else {
-            if(results.length===0)
-            {
-                res.status(404).json({error:'Comment not found'});
-            }
-            else            {
-                res.json(results[0]);
-            }
-        }
-    });
-}
+exports.getCommentById = (req, res) => {
+    const { id } = req.params;
 
-exports.createComment=(req,res)=>{
-    const {postId,userId,title,body}=req.body;
-    if(!postId) return res.status(400).json({error:'postId is required'});
-    if(!userId) return res.status(400).json({error:'userId is required'});
-    if(!title) return res.status(400).json({error:'title is required'});
-    if(!body) return res.status(400).json({error:'body is required'});
-    
-    db.query('INSERT INTO comments (postId,userId,title,body) VALUES (?,?,?,?)',[postId,userId,title,body],(err,result)=>{
-        if(err){
-            console.error('Error creating comment:',err);
-            res.status(500).json({error:'Failed to create comment'});  
+    db.query(
+        'SELECT * FROM comments WHERE id = ?',
+        [id],
+        (err, results) => {
+            if (err) {
+                console.error('Error fetching comment:', err);
+                return res.status(500).json({ error: 'Failed to fetch comment' });
+            }
+
+            if (results.length === 0) {
+                return res.status(404).json({ error: 'Comment not found' });
+            }
+
+            res.json(results[0]);
         }
+    );
+};
+
+exports.createComment = (req, res) => {
+    const { postId, userId, title, body } = req.body;
+
+    if (!postId) {
+        return res.status(400).json({ error: 'postId is required' });
+    }
+
+    if (!userId) {
+        return res.status(400).json({ error: 'userId is required' });
+    }
+
+    if (!title) {
+        return res.status(400).json({ error: 'title is required' });
+    }
+
+    if (!body) {
+        return res.status(400).json({ error: 'body is required' });
+    }
+
+    const sql = `
+        INSERT INTO comments (postId, userId, title, body)
+        VALUES (?, ?, ?, ?)
+    `;
+
+    db.query(sql, [postId, userId, title, body], (err, result) => {
+        if (err) {
+            console.error('Error creating comment:', err);
+            return res.status(500).json({ error: 'Failed to create comment' });
+        }
+
         db.query(
-        `SELECT comments.*, users.username, users.email
-        FROM comments JOIN users ON comments.userId = users.id
-        WHERE comments.id = ?`,
-        [result.insertId],
-        (err2, rows) => {
-        if (err2 || rows.length === 0) {
-              console.error('Error fetching new comment data:', err2);
-            return res.status(500).json({ error: 'Comment created, but failed to fetch confirmation' });
-            }
-        res.status(201).json(rows[0]);
+            `
+            SELECT comments.*, users.username, users.email
+            FROM comments
+            JOIN users ON comments.userId = users.id
+            WHERE comments.id = ?
+            `,
+            [result.insertId],
+            (err2, rows) => {
+                if (err2 || rows.length === 0) {
+                    console.error('Error fetching new comment data:', err2);
+                    return res.status(500).json({
+                        error: 'Comment created, but failed to fetch confirmation'
+                    });
+                }
+
+                res.status(201).json(rows[0]);
             }
         );
-
     });
-}
+};
 
-exports.updateComment=(req,res)=>{
-   const {id}=req.params;
-   const {userId,body,title}=req.body;
-   db.query('UPDATE comments SET title=?,body=?  WHERE id=? AND userId=?',[title,body,id,userId],(err,results)=>{
-    if(err)
-    {
-        console.error('Error updating comment:',err);
-        res.status(500).json({error:'Failed to update comment'});  
-    }
-    else{
-        if(results.affectedRows===0)
-        {
-            res.status(404).json({error:'Comment not found'});
-        }
-        else{
-            res.json({message:'Comment updated successfully'});
-        }
-    }
-   });
-}
+exports.updateComment = (req, res) => {
+    const { id } = req.params;
+    const { userId, title, body } = req.body;
 
-exports.deleteComment=(req,res)=>{
-    const {id}=req.params;
-    const userId=req.body.userId;
-    db.query('DELETE FROM comments WHERE id=? AND userId=?',[id,userId],(err,results)=>{
-        if(err){
-            console.error('Error deleting comment:',err);
-            res.status(500).json({error:'Failed to delete comment'});  
+    if (!userId) {
+        return res.status(400).json({ error: 'userId is required' });
+    }
+
+    if (!title) {
+        return res.status(400).json({ error: 'title is required' });
+    }
+
+    if (!body) {
+        return res.status(400).json({ error: 'body is required' });
+    }
+
+    const sql = `
+        UPDATE comments
+        SET title = ?, body = ?
+        WHERE id = ? AND userId = ?
+    `;
+
+    db.query(sql, [title, body, id, userId], (err, result) => {
+        if (err) {
+            console.error('Error updating comment:', err);
+            return res.status(500).json({ error: 'Failed to update comment' });
         }
-        else{
-            if(results.affectedRows===0)
-            {
-                res.status(404).json({error:'Comment not found'});
-            }
-            else{
-                res.json({message:'Comment deleted successfully'});
-            }
+
+        if (result.affectedRows === 0) {
+            return res.status(403).json({
+                error: 'Action forbidden: comment not found or belongs to another user.'
+            });
         }
+
+        db.query(
+            `
+            SELECT comments.*, users.username, users.email
+            FROM comments
+            JOIN users ON comments.userId = users.id
+            WHERE comments.id = ? AND comments.userId = ?
+            `,
+            [id, userId],
+            (err2, rows) => {
+                if (err2 || rows.length === 0) {
+                    return res.status(500).json({
+                        error: 'Failed to fetch updated comment details'
+                    });
+                }
+
+                res.json(rows[0]);
+            }
+        );
     });
+};
 
-}
+exports.deleteComment = (req, res) => {
+    const { id } = req.params;
+    const { userId } = req.body;
+
+    if (!userId) {
+        return res.status(400).json({ error: 'userId is required' });
+    }
+
+    db.query(
+        'DELETE FROM comments WHERE id = ? AND userId = ?',
+        [id, userId],
+        (err, result) => {
+            if (err) {
+                console.error('Error deleting comment:', err);
+                return res.status(500).json({ error: 'Failed to delete comment' });
+            }
+
+            if (result.affectedRows === 0) {
+                return res.status(403).json({
+                    error: 'Action forbidden: comment not found or belongs to another user.'
+                });
+            }
+
+            res.json({ message: 'Comment deleted successfully' });
+        }
+    );
+};
