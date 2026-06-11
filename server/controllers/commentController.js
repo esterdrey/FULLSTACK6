@@ -185,12 +185,19 @@ exports.deleteComment = (req, res) => {
         return res.status(400).json({ error: 'userId is required' });
     }
 
-    db.query(
-        'DELETE FROM comments WHERE id = ? AND userId = ?',
-        [id, userId],
-        (err, result) => {
-            if (err) {
-                console.error('Error deleting comment:', err);
+    db.query('SELECT isAdmin FROM users WHERE id = ?', [userId], (err, results) => {
+        if (err || results.length === 0)
+            return res.status(500).json({ error: 'Database error' });
+
+        const isAdmin = !!results[0].isAdmin;
+        const sql = isAdmin
+            ? 'DELETE FROM comments WHERE id = ?'
+            : 'DELETE FROM comments WHERE id = ? AND userId = ?';
+        const params = isAdmin ? [id] : [id, userId];
+
+        db.query(sql, params, (err2, result) => {
+            if (err2) {
+                console.error('Error deleting comment:', err2);
                 return res.status(500).json({ error: 'Failed to delete comment' });
             }
 
@@ -201,6 +208,6 @@ exports.deleteComment = (req, res) => {
             }
 
             res.json({ message: 'Comment deleted successfully' });
-        }
-    );
+        });
+    });
 };

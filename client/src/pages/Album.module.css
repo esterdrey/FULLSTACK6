@@ -206,6 +206,30 @@
   background: #4f46e5;
 }
 
+/* ── Load more ── */
+.loadMoreWrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 28px;
+}
+.loadMoreBtn {
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  border-radius: 10px;
+  padding: 10px 32px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+.loadMoreBtn:hover {
+  background: #eef2ff;
+  border-color: #6366f1;
+  color: #6366f1;
+}
+
 /* ── Empty state ── */
 .emptyMessage {
   color: #94a3b8;

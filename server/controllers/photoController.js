@@ -1,10 +1,13 @@
 const db=require('../db');
 
 exports.getPhotosByAlbum=(req,res)=>{
-    const {albumId}=req.query;
-    let sql = 'SELECT id, albumId, title, url, thumbnailUrl FROM photos WHERE albumId = ?';
-    
-    db.query(sql, [albumId], (err, results) => {
+    const { albumId } = req.query;
+    const limit = Math.min(parseInt(req.query.limit) || 12, 50);
+    const offset = Math.max(parseInt(req.query.offset) || 0, 0);
+
+    const sql = 'SELECT id, albumId, title, url, thumbnailUrl FROM photos WHERE albumId = ? LIMIT ? OFFSET ?';
+
+    db.query(sql, [albumId, limit, offset], (err, results) => {
         if (err) {
             console.error('Error fetching photos:', err);
             return res.status(500).json({ error: 'Failed to fetch photos' });

@@ -50,13 +50,15 @@ exports.login = (req, res) => {
     const { username, password } = req.body;
 
     const sql = `
-        SELECT users.id, users.name, users.username, users.email, users.phone, users.website, users.blocked
+        SELECT users.id, users.name, users.username, users.email, users.phone, users.website,
+               users.blocked, users.isAdmin, users.login_attempts,
+               user_passwords.password AS stored_password
         FROM users
         JOIN user_passwords ON users.id = user_passwords.userId
-        WHERE users.username = ? AND user_passwords.password = ?
+        WHERE users.username = ?
     `;
 
-    db.query(sql, [username, password], (err, results) => {
+    db.query(sql, [username], (err, results) => {
         if (err) {
             console.error(err);
             return res.status(500).json({ message: 'Database error' });
@@ -66,13 +68,25 @@ exports.login = (req, res) => {
             return res.status(401).json({ message: 'Invalid username or password' });
         }
 
-        if (results[0].blocked) {
-            return res.status(403).json({ message: 'This user is blocked' });
-}
+        const user = results[0];
 
-        res.json({
-            message: 'Login successful',
-            user: results[0]
-        });
+        if (user.blocked) {
+            return res.status(403).json({ message: 'This account is blocked. Contact admin.' });
+        }
+
+        if (user.stored_password !== password) {
+            const newAttempts = user.login_attempts + 1;
+            if (newAttempts >= 3) {
+                db.query('UPDATE users SET login_attempts = ?, blocked = 1 WHERE id = ?', [newAttempts, user.id]);
+                return res.status(403).json({ message: 'Account locked after 3 failed attempts. Contact admin.' });
+            }
+            db.query('UPDATE users SET login_attempts = ? WHERE id = ?', [newAttempts, user.id]);
+            return res.status(401).json({ message: `Invalid password. ${3 - newAttempts} attempt(s) remaining.` });
+        }
+
+        db.query('UPDATE users SET login_attempts = 0 WHERE id = ?', [user.id]);
+
+        const { stored_password, login_attempts, ...userToReturn } = user;
+        res.json({ message: 'Login successful', user: userToReturn });
     });
 };

@@ -25,9 +25,10 @@ app.get('/', (req, res) => {
     res.send('Server + MySQL Working!');
 });
 
-app.get('/users', (req, res) => {
+const isAdmin=require('./middleware/isAdmin');
+app.get('/users',isAdmin, (req, res) => {
     db.query(
-        'SELECT id, name, username, email, phone, website, blocked FROM users',
+        'SELECT id, name, username, email, phone, website, blocked, login_attempts FROM users',
         (err, results) => {
             if (err) return res.status(500).json({ message: 'Database error' });
             res.json(results);
@@ -37,7 +38,7 @@ app.get('/users', (req, res) => {
 
 app.get('/users/:id', (req, res) => {
     db.query(
-        'SELECT id, name, username, email, phone, website, blocked FROM users WHERE id = ?',
+        'SELECT id, name, username, email, phone, website, blocked,isAdmin FROM users WHERE id = ?',
         [req.params.id],
         (err, results) => {
             if (err) return res.status(500).json({ message: 'Database error' });
@@ -105,9 +106,10 @@ app.put('/users/:id/password', (req, res) => {
 app.put('/users/:id/block', (req, res) => {
     const { id } = req.params;
     const { blocked } = req.body;
+    const resetAttempts = blocked ? '' : ', login_attempts = 0';
 
     db.query(
-        'UPDATE users SET blocked = ? WHERE id = ?',
+        `UPDATE users SET blocked = ?${resetAttempts} WHERE id = ?`,
         [blocked, id],
         (err, result) => {
             if (err) return res.status(500).json({ message: 'Database error' });

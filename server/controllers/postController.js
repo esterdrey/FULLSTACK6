@@ -35,10 +35,15 @@ exports.getAllPosts = (req, res) => {
 
     const allowedSort = ["id", "title"];
     const sortField = allowedSort.includes(sort) ? sort : "id";
-
     const sortOrder = order.toUpperCase() === "DESC" ? "DESC" : "ASC";
-
     sql += ` ORDER BY posts.${sortField} ${sortOrder}`;
+
+    if (req.query.limit !== undefined) {
+        const limit = Math.min(parseInt(req.query.limit) || 10, 50);
+        const offset = Math.max(parseInt(req.query.offset) || 0, 0);
+        sql += ` LIMIT ? OFFSET ?`;
+        params.push(limit, offset);
+    }
 
     db.query(sql, params, (err, results) => {
         if (err) {
@@ -201,23 +206,29 @@ exports.deletePost = (req, res) => {
         return res.status(400).json({ error: 'userId is required' });
     }
 
-    const sql = `
-        DELETE FROM posts
-        WHERE id = ? AND userId = ?
-    `;
+    db.query('SELECT isAdmin FROM users WHERE id = ?', [userId], (err, results) => {
+        if (err || results.length === 0)
+            return res.status(500).json({ error: 'Database error' });
 
-    db.query(sql, [id, userId], (err, result) => {
-        if (err) {
-            console.error('Error deleting post:', err);
-            return res.status(500).json({ error: 'Failed to delete post' });
-        }
+        const isAdmin = !!results[0].isAdmin;
+        const sql = isAdmin
+            ? 'DELETE FROM posts WHERE id = ?'
+            : 'DELETE FROM posts WHERE id = ? AND userId = ?';
+        const params = isAdmin ? [id] : [id, userId];
 
-        if (result.affectedRows === 0) {
-            return res.status(403).json({
-                error: 'Action forbidden: Post not found or it belongs to another user.'
-            });
-        }
+        db.query(sql, params, (err2, result) => {
+            if (err2) {
+                console.error('Error deleting post:', err2);
+                return res.status(500).json({ error: 'Failed to delete post' });
+            }
 
-        res.json({ message: 'Post deleted successfully' });
+            if (result.affectedRows === 0) {
+                return res.status(403).json({
+                    error: 'Action forbidden: Post not found or it belongs to another user.'
+                });
+            }
+
+            res.json({ message: 'Post deleted successfully' });
+        });
     });
 };

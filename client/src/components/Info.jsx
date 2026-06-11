@@ -111,40 +111,7 @@ function Info({ user, onClose }) {
     }
   };
 
-  const handleBlockUser = async () => {
-    const confirmBlock = window.confirm(
-      "Are you sure you want to block this user?"
-    );
-
-    if (!confirmBlock) return;
-
-    try {
-      const res = await fetch(`http://localhost:3000/users/${user.id}/block`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          blocked: 1,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.message || "Failed to block user");
-        return;
-      }
-
-      alert("User blocked successfully");
-
-      localStorage.removeItem("currentUser");
-      window.location.href = "/login";
-    } catch (error) {
-      console.error("Error blocking user:", error);
-      alert("Error blocking user");
-    }
-  };
+  
 
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -192,12 +159,8 @@ function Info({ user, onClose }) {
                     Change Password
                   </button>
 
-                  <button
-                    className={styles.dangerBtn}
-                    onClick={handleBlockUser}
-                  >
-                    Block User
-                  </button>
+                 
+                   
                 </div>
               </>
             )}

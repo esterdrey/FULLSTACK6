@@ -17,22 +17,24 @@ function Navbar() {
     navigate("/login");
   };
 
+
   return (
     <>
       <nav className={styles.navbar}>
-        <div className={styles.logo}>JSON App</div>
-
+        <div className={styles.logo}>My App</div>
         <div className={styles.links}>
           <NavLink to="/home">Home</NavLink>
           <NavLink to={`/users/${currentUser.username}/todos`}>Todos</NavLink>
-          <NavLink to={`/users/${currentUser.username}/posts`}>Posts</NavLink>
+          <NavLink to={`/users/${currentUser.username}/posts`}>My Posts</NavLink>
+          <NavLink to={"/posts"}>All Posts</NavLink>
           <NavLink to={`/users/${currentUser.username}/albums`}>Albums</NavLink>
-
+          {!!currentUser.isAdmin &&
+            <NavLink to={"/admin"}>Admin</NavLink>
+          }
           <button onClick={() => setShowInfo(true)}>Info</button>
           <button onClick={logout}>Logout</button>
         </div>
       </nav>
-
       {showInfo && (
         <Info user={currentUser} onClose={() => setShowInfo(false)} />
       )}

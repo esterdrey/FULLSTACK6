@@ -10,6 +10,22 @@
 }
 .card:hover { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06); }
 
+.author {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.authorName {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #262626;
+}
+.authorEmail {
+  font-size: 0.78rem;
+  color: #8e8e8e;
+}
+
 .title {
   font-size: 1.05rem;
   font-weight: 700;
