@@ -100,25 +100,13 @@ exports.createComment = (req, res) => {
             return res.status(500).json({ error: 'Failed to create comment' });
         }
 
-        db.query(
-            `
-            SELECT comments.*, users.username, users.email
-            FROM comments
-            JOIN users ON comments.userId = users.id
-            WHERE comments.id = ?
-            `,
-            [result.insertId],
-            (err2, rows) => {
-                if (err2 || rows.length === 0) {
-                    console.error('Error fetching new comment data:', err2);
-                    return res.status(500).json({
-                        error: 'Comment created, but failed to fetch confirmation'
-                    });
-                }
-
-                res.status(201).json(rows[0]);
-            }
-        );
+        res.status(201).json({
+            id: result.insertId,
+            postId,
+            userId,
+            title,
+            body
+        });
     });
 };
 
@@ -156,24 +144,12 @@ exports.updateComment = (req, res) => {
             });
         }
 
-        db.query(
-            `
-            SELECT comments.*, users.username, users.email
-            FROM comments
-            JOIN users ON comments.userId = users.id
-            WHERE comments.id = ? AND comments.userId = ?
-            `,
-            [id, userId],
-            (err2, rows) => {
-                if (err2 || rows.length === 0) {
-                    return res.status(500).json({
-                        error: 'Failed to fetch updated comment details'
-                    });
-                }
-
-                res.json(rows[0]);
-            }
-        );
+        res.json({
+            id: Number(id),
+            userId,
+            title,
+            body
+        });
     });
 };
 
@@ -185,29 +161,32 @@ exports.deleteComment = (req, res) => {
         return res.status(400).json({ error: 'userId is required' });
     }
 
-    db.query('SELECT isAdmin FROM users WHERE id = ?', [userId], (err, results) => {
-        if (err || results.length === 0)
-            return res.status(500).json({ error: 'Database error' });
+    const sql = `
+        DELETE FROM comments
+        WHERE id = ?
+          AND (
+              userId = ?
+              OR EXISTS (
+                  SELECT 1
+                  FROM users
+                  WHERE users.id = ?
+                    AND users.isAdmin = 1
+              )
+          )
+    `;
 
-        const isAdmin = !!results[0].isAdmin;
-        const sql = isAdmin
-            ? 'DELETE FROM comments WHERE id = ?'
-            : 'DELETE FROM comments WHERE id = ? AND userId = ?';
-        const params = isAdmin ? [id] : [id, userId];
+    db.query(sql, [id, userId, userId], (err, result) => {
+        if (err) {
+            console.error('Error deleting comment:', err);
+            return res.status(500).json({ error: 'Failed to delete comment' });
+        }
 
-        db.query(sql, params, (err2, result) => {
-            if (err2) {
-                console.error('Error deleting comment:', err2);
-                return res.status(500).json({ error: 'Failed to delete comment' });
-            }
+        if (result.affectedRows === 0) {
+            return res.status(403).json({
+                error: 'Action forbidden: comment not found or belongs to another user.'
+            });
+        }
 
-            if (result.affectedRows === 0) {
-                return res.status(403).json({
-                    error: 'Action forbidden: comment not found or belongs to another user.'
-                });
-            }
-
-            res.json({ message: 'Comment deleted successfully' });
-        });
+        res.json({ message: 'Comment deleted successfully' });
     });
 };

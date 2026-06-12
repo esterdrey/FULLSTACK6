@@ -9,11 +9,13 @@ import { useConfirmDialog } from '../components/ConfirmDialog.jsx';
 const PAGE_SIZE = 10;
 
 export const loader = async () => {
-    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-    if (!currentUser) return [];
     try {
-        const res = await fetch(`http://localhost:3000/posts`);
+        const res = await fetch(
+            `http://localhost:3000/posts?includeComments=true`
+        );
+
         if (!res.ok) throw new Error('Failed to fetch posts');
+
         return res.json();
     } catch (error) {
         console.error(error);

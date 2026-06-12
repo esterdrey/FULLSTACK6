@@ -41,7 +41,7 @@ function Albums() {
                 body: JSON.stringify({ userId: currentUser.id, title: editTitle })
             });
             const updated = await res.json();
-            setAlbums(prev => prev.map((album) => album.id === albumId ? updated : album));
+            setAlbums(prev => prev.map(album => album.id === albumId ? { ...album, ...updated } : album));
             setEditingId(null); // Fixed: Safely close edit mode after state updates
         }
         catch (error) {

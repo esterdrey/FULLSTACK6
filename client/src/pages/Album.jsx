@@ -84,18 +84,39 @@ function Album() {
     };
 
     const handleUpdatePhoto = async (photoId) => {
-        try {
-            const res = await fetch(`http://localhost:3000/photos/${photoId}`, {
+    try {
+        const res = await fetch(
+            `http://localhost:3000/photos/${photoId}`,
+            {
                 method: "PUT",
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: editTitle, userId: currentUser.id })
-            });
-            const updated = await res.json();
-            setPhotos(prev => prev.map(photo => photo.id === photoId ? updated : photo));
-            setEditingId(null);
-        } catch (error) {
-            console.error("Error updating photo:", error);
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    title: editTitle,
+                    userId: currentUser.id,
+                }),
+            }
+        );
+
+        if (!res.ok) {
+            throw new Error("Failed to update photo");
         }
+
+        const updated = await res.json();
+
+        setPhotos((prev) =>
+            prev.map((photo) =>
+                photo.id === photoId
+                    ? { ...photo, title: updated.title }
+                    : photo
+            )
+        );
+
+        setEditingId(null);
+    } catch (error) {
+        console.error("Error updating photo:", error);
+    }
     };
 
     const handleDeletePhoto = async (photoId) => {

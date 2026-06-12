@@ -32,54 +32,48 @@ exports.getAlbumById=(req,res)=>{
         }
     })
 }
-exports.createAlbum=(req,res)=>{
-    let {userId,title}=req.body;
-    let sql='INSERT INTO albums (userId,title) VALUES (?,?)';
-    db.query(sql,[userId,title],(err,result)=>{
-        if(err){
-             console.error('Error creating album:',err);
-            res.status(500).json({error:'Failed to create album'});  
-        }
-        let selectSql='SELECT * FROM albums WHERE id=?';
-        db.query(selectSql,[result.insertId],(err2,result2)=>{
-            if(err2 ||result2.length === 0){
-                console.error('Error fetching new album data:', err2);
-                return res.status(500).json({ error: 'Album created, but failed to fetch confirmation' });
-            }
-            res.status(201).json(result2[0]);
+exports.createAlbum = (req, res) => {
+    const { userId, title } = req.body;
 
-        })
-    })
-}
+    let sql = 'INSERT INTO albums (userId, title) VALUES (?, ?)';
 
-exports.updateAlbum=(req,res)=>{
-    let {id}=req.params;
-    const {userId,title}=req.body;
-    let sql='UPDATE albums set title=? WHERE id=? and userId=?';
-    db.query(sql,[title,id,userId], (err,result)=>{
-    if(err)
-    {
-        console.error('Error updating album:',err);
-        res.status(500).json({error:'Failed to update album'});  
-    }
-    else{
-        if(result.affectedRows===0)
-        {
-            res.status(404).json({error:'Album not found'});
+    db.query(sql, [userId, title], (err, result) => {
+        if (err) {
+            console.error('Error creating album:', err);
+            return res.status(500).json({ error: 'Failed to create album' });
         }
-       let selectSql = 'SELECT * FROM albums WHERE id = ?';
-        db.query(selectSql, [id], (err2, result2) => {
-            if (err2 || !result2 || result2.length === 0) {
-                console.error('Error fetching updated album data:', err2);
-                return res.status(500).json({ error: 'Album updated, but failed to fetch updated confirmation' });
-            }
-            
-            // Return the complete updated object back to React!
-            res.json(result2[0]);
-        })
-    }
-    })
-}
+
+        res.status(201).json({
+            id: result.insertId,
+            userId,
+            title
+        });
+    });
+};
+
+exports.updateAlbum = (req, res) => {
+    let { id } = req.params;
+    const { userId, title } = req.body;
+
+    let sql = 'UPDATE albums SET title = ? WHERE id = ? AND userId = ?';
+
+    db.query(sql, [title, id, userId], (err, result) => {
+        if (err) {
+            console.error('Error updating album:', err);
+            return res.status(500).json({ error: 'Failed to update album' });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Album not found' });
+        }
+
+        res.json({
+            id: Number(id),
+            userId,
+            title
+        });
+    });
+};
 exports.deleteAlbum=(req,res)=>{
     const {id}=req.params;
     const {userId}=req.body;

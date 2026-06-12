@@ -32,55 +32,51 @@ exports.getPhotoById=(req,res)=>{
     });
 }
 
-exports.createPhoto=(req,res)=>{   
+exports.createPhoto = (req, res) => {
     const { albumId, title, url, thumbnailUrl } = req.body;
-    
+
     let sql = 'INSERT INTO photos (albumId, title, url, thumbnailUrl) VALUES (?, ?, ?, ?)';
-    
+
     db.query(sql, [albumId, title, url, thumbnailUrl], (err, result) => {
         if (err) {
             console.error('Error creating photo:', err);
             return res.status(500).json({ error: 'Failed to create photo' });
         }
-        
-        let selectSql = 'SELECT * FROM photos WHERE id = ?';
-        db.query(selectSql, [result.insertId], (err2, result2) => {
-            if (err2 || !result2 || result2.length === 0) {
-                return res.status(500).json({ error: 'Photo created, but failed to fetch confirmation' });
-            }
-            res.status(201).json(result2[0]);
+
+        res.status(201).json({
+            id: result.insertId,
+            albumId,
+            title,
+            url,
+            thumbnailUrl
         });
     });
-}
+};
 
 exports.updatePhoto = (req, res) => {
     const { id } = req.params;
-    const { title, userId } = req.body; 
+    const { title, userId } = req.body;
 
-    let sql = `
-        UPDATE photos 
+    const sql = `
+        UPDATE photos
         JOIN albums ON photos.albumId = albums.id
-        SET photos.title = ? 
+        SET photos.title = ?
         WHERE photos.id = ? AND albums.userId = ?
     `;
-    
+
     db.query(sql, [title, id, userId], (err, result) => {
         if (err) {
             console.error('Error updating photo:', err);
             return res.status(500).json({ error: 'Failed to update photo' });
         }
+
         if (result.affectedRows === 0) {
             return res.status(404).json({ error: 'Photo not found or unauthorized' });
         }
-        
-        let selectSql = 'SELECT id, albumId, title, url, thumbnailUrl FROM photos WHERE id = ?';
-        db.query(selectSql, [id], (err2, result2) => {
-            if (err2 || !result2 || result2.length === 0) {
-                console.error('Error fetching updated photo:', err2);
-                return res.status(500).json({ error: 'Photo updated, but failed to fetch confirmation object' });
-            }
-            
-            res.json(result2[0]);
+
+        res.json({
+            id: Number(id),
+            title
         });
     });
 };

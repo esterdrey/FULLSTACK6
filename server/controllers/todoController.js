@@ -110,18 +110,12 @@ exports.updateTodo = (req, res) => {
             return res.status(404).json({ message: 'Todo not found' });
         }
 
-        db.query(
-            'SELECT * FROM todos WHERE id = ? AND userId = ?',
-            [id, userId],
-            (err2, rows) => {
-                if (err2) {
-                    console.error(err2);
-                    return res.status(500).json({ message: 'Database error' });
-                }
-
-                res.json(rows[0]);
-            }
-        );
+        res.json({
+            id: Number(id),
+            userId,
+            title,
+            completed
+        });
     });
 };
 

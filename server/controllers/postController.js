@@ -6,7 +6,8 @@ exports.getAllPosts = (req, res) => {
         userId,
         q,
         sort = "id",
-        order = "ASC"
+        order = "ASC",
+        includeComments
     } = req.query;
 
     let sql = `
@@ -36,22 +37,50 @@ exports.getAllPosts = (req, res) => {
     const allowedSort = ["id", "title"];
     const sortField = allowedSort.includes(sort) ? sort : "id";
     const sortOrder = order.toUpperCase() === "DESC" ? "DESC" : "ASC";
+
     sql += ` ORDER BY posts.${sortField} ${sortOrder}`;
 
     if (req.query.limit !== undefined) {
         const limit = Math.min(parseInt(req.query.limit) || 10, 50);
         const offset = Math.max(parseInt(req.query.offset) || 0, 0);
+
         sql += ` LIMIT ? OFFSET ?`;
         params.push(limit, offset);
     }
 
-    db.query(sql, params, (err, results) => {
+    db.query(sql, params, (err, posts) => {
         if (err) {
             console.error('Error fetching posts:', err);
             return res.status(500).json({ error: 'Failed to fetch posts' });
         }
 
-        res.json(results);
+        if (includeComments !== "true" || posts.length === 0) {
+            return res.json(posts);
+        }
+
+        const postIds = posts.map(post => post.id);
+
+        const commentsSql = `
+            SELECT comments.*, users.username, users.email
+            FROM comments
+            JOIN users ON users.id = comments.userId
+            WHERE comments.postId IN (?)
+            ORDER BY comments.id ASC
+        `;
+
+        db.query(commentsSql, [postIds], (err2, comments) => {
+            if (err2) {
+                console.error('Error fetching comments:', err2);
+                return res.status(500).json({ error: 'Failed to fetch comments' });
+            }
+
+            const postsWithComments = posts.map(post => ({
+                ...post,
+                comments: comments.filter(comment => comment.postId === post.id)
+            }));
+
+            res.json(postsWithComments);
+        });
     });
 };
 
@@ -119,27 +148,13 @@ exports.createPost = (req, res) => {
             return res.status(500).json({ error: 'Failed to create post' });
         }
 
-        db.query(
-            `
-            SELECT posts.*, users.username, users.email
-            FROM posts
-            JOIN users ON users.id = posts.userId
-            WHERE posts.id = ?
-            `,
-            [result.insertId],
-            (err2, rows) => {
-                if (err2 || rows.length === 0) {
-                    return res.status(201).json({
-                        id: result.insertId,
-                        userId,
-                        title,
-                        body
-                    });
-                }
-
-                res.status(201).json(rows[0]);
-            }
-        );
+        res.status(201).json({
+            id: result.insertId,
+            userId,
+            title,
+            body,
+            comments: []
+        });
     });
 };
 
@@ -177,24 +192,12 @@ exports.updatePost = (req, res) => {
             });
         }
 
-        db.query(
-            `
-            SELECT posts.*, users.username, users.email
-            FROM posts
-            JOIN users ON users.id = posts.userId
-            WHERE posts.id = ? AND posts.userId = ?
-            `,
-            [id, userId],
-            (err2, rows) => {
-                if (err2 || rows.length === 0) {
-                    return res.status(500).json({
-                        error: 'Failed to fetch updated post details'
-                    });
-                }
-
-                res.json(rows[0]);
-            }
-        );
+        res.json({
+            id: Number(id),
+            userId,
+            title,
+            body
+        });
     });
 };
 
@@ -206,29 +209,32 @@ exports.deletePost = (req, res) => {
         return res.status(400).json({ error: 'userId is required' });
     }
 
-    db.query('SELECT isAdmin FROM users WHERE id = ?', [userId], (err, results) => {
-        if (err || results.length === 0)
-            return res.status(500).json({ error: 'Database error' });
+    const sql = `
+        DELETE FROM posts
+        WHERE id = ?
+          AND (
+              userId = ?
+              OR EXISTS (
+                  SELECT 1
+                  FROM users
+                  WHERE users.id = ?
+                    AND users.isAdmin = 1
+              )
+          )
+    `;
 
-        const isAdmin = !!results[0].isAdmin;
-        const sql = isAdmin
-            ? 'DELETE FROM posts WHERE id = ?'
-            : 'DELETE FROM posts WHERE id = ? AND userId = ?';
-        const params = isAdmin ? [id] : [id, userId];
+    db.query(sql, [id, userId, userId], (err, result) => {
+        if (err) {
+            console.error('Error deleting post:', err);
+            return res.status(500).json({ error: 'Failed to delete post' });
+        }
 
-        db.query(sql, params, (err2, result) => {
-            if (err2) {
-                console.error('Error deleting post:', err2);
-                return res.status(500).json({ error: 'Failed to delete post' });
-            }
+        if (result.affectedRows === 0) {
+            return res.status(403).json({
+                error: 'Action forbidden: Post not found or it belongs to another user.'
+            });
+        }
 
-            if (result.affectedRows === 0) {
-                return res.status(403).json({
-                    error: 'Action forbidden: Post not found or it belongs to another user.'
-                });
-            }
-
-            res.json({ message: 'Post deleted successfully' });
-        });
+        res.json({ message: 'Post deleted successfully' });
     });
 };

@@ -34,30 +34,38 @@ function Info({ user, onClose }) {
   };
 
   const handleSave = async () => {
-    try {
-      const res = await fetch(`http://localhost:3000/users/${user.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+  try {
+    const res = await fetch(`http://localhost:3000/users/${user.id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formData),
+    });
 
-      const updatedUser = await res.json();
+    const updatedUser = await res.json();
 
-      if (!res.ok) {
-        alert(updatedUser.message || "Failed to update profile");
-        return;
-      }
-
-      localStorage.setItem("currentUser", JSON.stringify(updatedUser));
-      alert("Profile updated successfully");
-      window.location.reload();
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      alert("Error updating profile");
+    if (!res.ok) {
+      alert(updatedUser.message || "Failed to update profile");
+      return;
     }
-  };
+
+    const fullUpdatedUser = {
+      ...user,
+      ...updatedUser,
+    };
+
+    localStorage.setItem("currentUser", JSON.stringify(fullUpdatedUser));
+
+    alert("Profile updated successfully");
+
+    setMode("view");
+    onClose();
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    alert("Error updating profile");
+  }
+};
 
   const handleChangePassword = async () => {
     if (

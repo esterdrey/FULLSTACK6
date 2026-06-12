@@ -6,8 +6,8 @@ const authRoutes = require('./routes/authRoutes');
 const todoRoutes = require('./routes/todoRoutes');
 const postRoutes = require('./routes/postRoutes');
 const commentRoutes = require('./routes/commentRoutes');
-const albumRoutes=require('./routes/albumRoutes');
-const photoRoutes=require('./routes/photoRoutes');
+const albumRoutes = require('./routes/albumRoutes');
+const photoRoutes = require('./routes/photoRoutes');
 
 const app = express();
 
@@ -18,31 +18,52 @@ app.use('/', authRoutes);
 app.use('/', todoRoutes);
 app.use('/posts', postRoutes);
 app.use('/comments', commentRoutes);
-app.use('/albums',albumRoutes);
-app.use('/photos',photoRoutes);
+app.use('/albums', albumRoutes);
+app.use('/photos', photoRoutes);
 
 app.get('/', (req, res) => {
     res.send('Server + MySQL Working!');
 });
 
-const isAdmin=require('./middleware/isAdmin');
-app.get('/users',isAdmin, (req, res) => {
-    db.query(
-        'SELECT id, name, username, email, phone, website, blocked, login_attempts FROM users',
-        (err, results) => {
-            if (err) return res.status(500).json({ message: 'Database error' });
-            res.json(results);
+app.get('/users', (req, res) => {
+    const { userId } = req.query;
+
+    if (!userId) {
+        return res.status(401).json({ message: 'Not authenticated' });
+    }
+
+    const sql = `
+        SELECT id, name, username, email, phone, website, blocked, login_attempts
+        FROM users
+        WHERE EXISTS (
+            SELECT 1
+            FROM users AS admin_user
+            WHERE admin_user.id = ?
+              AND admin_user.isAdmin = 1
+        )
+    `;
+
+    db.query(sql, [userId], (err, results) => {
+        if (err) {
+            return res.status(500).json({ message: 'Database error' });
         }
-    );
+
+        if (results.length === 0) {
+            return res.status(403).json({ message: 'Admins only' });
+        }
+
+        res.json(results);
+    });
 });
 
 app.get('/users/:id', (req, res) => {
     db.query(
-        'SELECT id, name, username, email, phone, website, blocked,isAdmin FROM users WHERE id = ?',
+        'SELECT id, name, username, email, phone, website, blocked, isAdmin FROM users WHERE id = ?',
         [req.params.id],
         (err, results) => {
             if (err) return res.status(500).json({ message: 'Database error' });
             if (results.length === 0) return res.status(404).json({ message: 'User not found' });
+
             res.json(results[0]);
         }
     );
@@ -61,16 +82,18 @@ app.put('/users/:id', (req, res) => {
 
     db.query(sql, [name, email, phone, website, id], (err, result) => {
         if (err) return res.status(500).json({ message: 'Database error' });
-        if (result.affectedRows === 0) return res.status(404).json({ message: 'User not found' });
 
-        db.query(
-            'SELECT id, name, username, email, phone, website, blocked FROM users WHERE id = ?',
-            [id],
-            (err2, rows) => {
-                if (err2) return res.status(500).json({ message: 'Database error' });
-                res.json(rows[0]);
-            }
-        );
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.json({
+            id: Number(id),
+            name,
+            email,
+            phone,
+            website
+        });
     });
 });
 
@@ -95,6 +118,7 @@ app.put('/users/:id/password', (req, res) => {
                 [newPassword, id],
                 (err2) => {
                     if (err2) return res.status(500).json({ message: 'Database error' });
+
                     res.json({ message: 'Password updated successfully' });
                 }
             );
