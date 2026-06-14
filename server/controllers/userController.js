@@ -18,17 +18,13 @@ exports.getAllUsers = (req, res) => {
         return res.status(401).json({ message: 'Not authenticated' });
     }
 
-    const sql = `
-        SELECT id, name, username, email, phone, website, blocked, login_attempts
-        FROM users
-        WHERE (SELECT isAdmin FROM users WHERE id = ?) = 1
-    `;
-
-    db.query(sql, [userId], (err, results) => {
-        if (err) return res.status(500).json({ message: 'Database error' });
-        if (results.length === 0) return res.status(403).json({ message: 'Admins only' });
-        res.json(results);
-    });
+    db.query(
+        'SELECT id, name, username, email, phone, website, blocked, login_attempts FROM users',
+        (err, results) => {
+            if (err) return res.status(500).json({ message: 'Database error' });
+            res.json(results);
+        }
+    );
 };
 
 exports.getUserById = (req, res) => {
@@ -90,25 +86,19 @@ exports.updatePassword = (req, res) => {
 
 exports.blockUser = (req, res) => {
     const { id } = req.params;
-    const { blocked, currentUserId } = req.body;
+    const { blocked } = req.body;
+    const resetAttempts = blocked ? '' : ', login_attempts = 0';
 
-    db.query('SELECT isAdmin FROM users WHERE id = ?', [currentUserId], (err, results) => {
-        if (err) return res.status(500).json({ message: 'Database error' });
-        if (!results[0]?.isAdmin) return res.status(403).json({ message: 'Admins only' });
+    db.query(
+        `UPDATE users SET blocked = ?${resetAttempts} WHERE id = ?`,
+        [blocked, id],
+        (err, result) => {
+            if (err) return res.status(500).json({ message: 'Database error' });
+            if (result.affectedRows === 0) return res.status(404).json({ message: 'User not found' });
 
-        const resetAttempts = blocked ? '' : ', login_attempts = 0';
-
-        db.query(
-            `UPDATE users SET blocked = ?${resetAttempts} WHERE id = ?`,
-            [blocked, id],
-            (err2, result) => {
-                if (err2) return res.status(500).json({ message: 'Database error' });
-                if (result.affectedRows === 0) return res.status(404).json({ message: 'User not found' });
-
-                res.json({
-                    message: blocked ? 'User blocked successfully' : 'User unblocked successfully'
-                });
-            }
-        );
-    });
+            res.json({
+                message: blocked ? 'User blocked successfully' : 'User unblocked successfully'
+            });
+        }
+    );
 };
