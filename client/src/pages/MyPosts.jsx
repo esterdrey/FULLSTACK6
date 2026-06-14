@@ -11,7 +11,7 @@ export const loader = async () => {
     if (!currentUser) return [];
 
     const res = await fetch(
-        `http://localhost:3000/posts?userId=${currentUser.id}&includeComments=true`
+        `http://localhost:3000/posts?userId=${currentUser.id}`
     );
 
     if (res.status === 403) {

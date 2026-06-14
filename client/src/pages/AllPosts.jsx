@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useLoaderData } from 'react-router-dom';
+import { useLoaderData ,redirect} from 'react-router-dom';
 import { useCurrentUser } from '../UserContext.js';
 import Post from '../components/Post.jsx';
 import styles from './MyPosts.module.css';
@@ -10,8 +10,15 @@ const PAGE_SIZE = 10;
 
 export const loader = async () => {
     const res = await fetch(
-        `http://localhost:3000/posts?includeComments=true&limit=${PAGE_SIZE}&offset=0`
+        `http://localhost:3000/posts?limit=${PAGE_SIZE}&offset=0`
     );
+    if (res.status === 403) {
+        const data = await res.json().catch(() => ({}));
+        if (data.message === 'Account is blocked') {
+            localStorage.removeItem('currentUser');
+            return redirect('/blocked');
+        }
+    }
     if (!res.ok) throw new Error('Failed to fetch posts');
     return res.json();
 };
@@ -41,7 +48,6 @@ function AllPosts() {
         setLoading(true);
         try {
             const params = new URLSearchParams({
-                includeComments: 'true',
                 limit: PAGE_SIZE,
                 offset,
             });

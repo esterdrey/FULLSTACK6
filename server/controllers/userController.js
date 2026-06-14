@@ -14,9 +14,7 @@ exports.checkAdmin = (req, res) => {
 exports.getAllUsers = (req, res) => {
     const { userId } = req.query;
 
-    if (!userId) {
-        return res.status(401).json({ message: 'Not authenticated' });
-    }
+   
 
     db.query(
         'SELECT id, name, username, email, phone, website, blocked, login_attempts FROM users',

@@ -1,15 +1,22 @@
 const db=require('../db');
 
 exports.getAllAlbums= (req,res)=>{
-    let {username}=req.query;
-    let sql='SELECT albums.id,albums.title from albums JOIN users on albums.userId=users.id WHERE username=?'
-    db.query(sql,[username],(err,results)=>{
-         if (err) {
+    const { username, userId } = req.query;
+    let sql, param;
+    if (userId) {
+        sql = 'SELECT albums.id, albums.title FROM albums WHERE userId = ?';
+        param = userId;
+    } else {
+        sql = 'SELECT albums.id, albums.title FROM albums JOIN users ON albums.userId = users.id WHERE users.username = ?';
+        param = username;
+    }
+    db.query(sql, [param], (err, results) => {
+        if (err) {
             console.error('Error fetching albums:', err);
-            return res.status(500).json({ error: 'Failed to fetch albums' });  
+            return res.status(500).json({ error: 'Failed to fetch albums' });
         }
         res.json(results);
-    })
+    });
 }
 
 exports.getAlbumById=(req,res)=>{

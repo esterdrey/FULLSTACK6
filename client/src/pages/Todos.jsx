@@ -1,4 +1,4 @@
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData,redirect } from "react-router-dom";
 import { useCurrentUser } from "../UserContext";
 import styles from "./Todos.module.css";
 import TodoItem from "../components/TodoItem.jsx";
@@ -10,7 +10,14 @@ const API = "http://localhost:3000/todos";
 export const loader = async () => {
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
   if (!currentUser?.id) return [];
-  const res = await fetch(`${API}?userId=${currentUser.id}&sort=id&order=ASC`);
+  const res = await fetch(`${API}?userId=${currentUser.id}`);
+  if (res.status === 403) {
+        const data = await res.json().catch(() => ({}));
+        if (data.message === 'Account is blocked') {
+            localStorage.removeItem('currentUser');
+            return redirect('/blocked');
+        }
+    }
   if (!res.ok) return [];
   return res.json();
 };

@@ -54,9 +54,11 @@ exports.getAllPosts = (req, res) => {
             return res.status(500).json({ error: 'Failed to fetch posts' });
         }
 
-        if (includeComments !== "true" || posts.length === 0) {
-            return res.json(posts);
+        if (!posts || posts.length === 0) {
+            return res.json([]);
         }
+
+       
 
         const postIds = posts.map(post => post.id);
 

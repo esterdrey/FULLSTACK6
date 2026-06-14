@@ -27,7 +27,7 @@ function AdminPanel() {
             const res = await fetch(`http://localhost:3000/users/${user.id}/block`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ blocked: newBlocked, currentUserId }),
+                body: JSON.stringify({ blocked: newBlocked, userId:currentUserId }),
             });
             if (!res.ok) throw new Error();
             setUsers(prev =>

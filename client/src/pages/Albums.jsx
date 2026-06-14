@@ -1,11 +1,20 @@
 import { useState } from "react";
 import { useCurrentUser } from "../UserContext";
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData ,redirect} from "react-router-dom";
 import { Link } from "react-router-dom";
 import styles from "./Albums.module.css";
 
-export const loader = async ({ params }) => {
-    const res = await fetch(`http://localhost:3000/albums?username=${params.username}`);
+export const loader = async () => {
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    if (!currentUser) return [];
+    const res = await fetch(`http://localhost:3000/albums?userId=${currentUser.id}`);
+    if (res.status === 403) {
+        const data = await res.json().catch(() => ({}));
+        if (data.message === 'Account is blocked') {
+            localStorage.removeItem('currentUser');
+            return redirect('/blocked');
+        }
+    }
     if (!res.ok) throw new Error("Failed to load albums");
     return res.json();
 };
