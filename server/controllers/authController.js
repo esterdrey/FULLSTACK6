@@ -110,7 +110,7 @@ exports.login = (req, res) => {
             });
         }
 
-        const { stored_password, login_attempts, ...userToReturn } = user;
+        const { stored_password, login_attempts, blocked, ...userToReturn } = user;
 
         if (user.login_attempts > 0) {
             db.query(

@@ -84,22 +84,7 @@ exports.getAllPosts = (req, res) => {
     });
 };
 
-exports.getPostByUserId = (req, res) => {
-    const { userId } = req.params;
 
-    db.query(
-        'SELECT * FROM posts WHERE userId = ? ORDER BY id ASC',
-        [userId],
-        (err, results) => {
-            if (err) {
-                console.error('Error fetching posts:', err);
-                return res.status(500).json({ error: 'Failed to fetch posts' });
-            }
-
-            res.json(results);
-        }
-    );
-};
 
 exports.getPostById = (req, res) => {
     const { id } = req.params;

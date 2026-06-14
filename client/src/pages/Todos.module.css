@@ -49,6 +49,73 @@
 .addButton:hover:not(:disabled) { background: #007bb5; }
 .addButton:disabled { background: #b2dffc; cursor: default; }
 
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 140px;
+  border: 1px solid #dbdbdb;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+}
+.searchInput:focus { border-color: #0095f6; }
+
+.filterGroup {
+  display: flex;
+  gap: 6px;
+}
+
+.filterBtn {
+  border: 1px solid #dbdbdb;
+  background: #fff;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.filterBtn:hover { background: #f0f0f0; }
+.filterBtn.active {
+  background: #0095f6;
+  color: #fff;
+  border-color: #0095f6;
+}
+
+.sortGroup {
+  display: flex;
+  gap: 6px;
+}
+
+.select {
+  border: 1px solid #dbdbdb;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  background: #fff;
+  cursor: pointer;
+  outline: none;
+}
+.select:focus { border-color: #0095f6; }
+
+.empty {
+  text-align: center;
+  color: #8e8e8e;
+  font-size: 0.95rem;
+  margin-top: 24px;
+}
+
 .list {
   list-style: none;
   margin: 0;

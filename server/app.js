@@ -8,11 +8,14 @@ const postRoutes = require('./routes/postRoutes');
 const commentRoutes = require('./routes/commentRoutes');
 const albumRoutes = require('./routes/albumRoutes');
 const photoRoutes = require('./routes/photoRoutes');
+const userRoutes = require('./routes/userRoutes');
+const checkBlocked = require('./middleware/checkBlocked');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(checkBlocked);
 
 app.use('/', authRoutes);
 app.use('/', todoRoutes);
@@ -20,131 +23,13 @@ app.use('/posts', postRoutes);
 app.use('/comments', commentRoutes);
 app.use('/albums', albumRoutes);
 app.use('/photos', photoRoutes);
+app.use('/users', userRoutes);
 
 app.get('/', (req, res) => {
     res.send('Server + MySQL Working!');
 });
 
-app.get('/users', (req, res) => {
-    const { userId } = req.query;
 
-    if (!userId) {
-        return res.status(401).json({ message: 'Not authenticated' });
-    }
-
-    const sql = `
-        SELECT id, name, username, email, phone, website, blocked, login_attempts
-        FROM users
-        WHERE EXISTS (
-            SELECT 1
-            FROM users AS admin_user
-            WHERE admin_user.id = ?
-              AND admin_user.isAdmin = 1
-        )
-    `;
-
-    db.query(sql, [userId], (err, results) => {
-        if (err) {
-            return res.status(500).json({ message: 'Database error' });
-        }
-
-        if (results.length === 0) {
-            return res.status(403).json({ message: 'Admins only' });
-        }
-
-        res.json(results);
-    });
-});
-
-app.get('/users/:id', (req, res) => {
-    db.query(
-        'SELECT id, name, username, email, phone, website, blocked, isAdmin FROM users WHERE id = ?',
-        [req.params.id],
-        (err, results) => {
-            if (err) return res.status(500).json({ message: 'Database error' });
-            if (results.length === 0) return res.status(404).json({ message: 'User not found' });
-
-            res.json(results[0]);
-        }
-    );
-});
-
-/* שינוי פרטים */
-app.put('/users/:id', (req, res) => {
-    const { id } = req.params;
-    const { name, email, phone, website } = req.body;
-
-    const sql = `
-        UPDATE users
-        SET name = ?, email = ?, phone = ?, website = ?
-        WHERE id = ?
-    `;
-
-    db.query(sql, [name, email, phone, website, id], (err, result) => {
-        if (err) return res.status(500).json({ message: 'Database error' });
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        res.json({
-            id: Number(id),
-            name,
-            email,
-            phone,
-            website
-        });
-    });
-});
-
-/* שינוי סיסמה */
-app.put('/users/:id/password', (req, res) => {
-    const { id } = req.params;
-    const { oldPassword, newPassword } = req.body;
-
-    db.query(
-        'SELECT password FROM user_passwords WHERE userId = ?',
-        [id],
-        (err, results) => {
-            if (err) return res.status(500).json({ message: 'Database error' });
-            if (results.length === 0) return res.status(404).json({ message: 'User password not found' });
-
-            if (results[0].password !== oldPassword) {
-                return res.status(401).json({ message: 'Old password is incorrect' });
-            }
-
-            db.query(
-                'UPDATE user_passwords SET password = ? WHERE userId = ?',
-                [newPassword, id],
-                (err2) => {
-                    if (err2) return res.status(500).json({ message: 'Database error' });
-
-                    res.json({ message: 'Password updated successfully' });
-                }
-            );
-        }
-    );
-});
-
-/* חסימת / שחרור משתמש */
-app.put('/users/:id/block', (req, res) => {
-    const { id } = req.params;
-    const { blocked } = req.body;
-    const resetAttempts = blocked ? '' : ', login_attempts = 0';
-
-    db.query(
-        `UPDATE users SET blocked = ?${resetAttempts} WHERE id = ?`,
-        [blocked, id],
-        (err, result) => {
-            if (err) return res.status(500).json({ message: 'Database error' });
-            if (result.affectedRows === 0) return res.status(404).json({ message: 'User not found' });
-
-            res.json({
-                message: blocked ? 'User blocked successfully' : 'User unblocked successfully'
-            });
-        }
-    );
-});
 
 app.listen(3000, () => {
     console.log('Server running on port 3000');

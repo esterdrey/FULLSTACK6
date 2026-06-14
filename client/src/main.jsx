@@ -15,12 +15,14 @@ import Albums, {loader as albumsLoader} from "./pages/Albums.jsx"
 import Album, {loader as albumLoader} from "./pages/Album.jsx"
 import ErrorPage from "./pages/ErrorPage.jsx";
 import AdminPanel,{loader as adminLoader} from "./pages/AdminPanel.jsx";
+import BlockedPage from "./pages/BlockedPage.jsx";
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
     children: [
       { path: "login", element: <LoginPage />, action: loginAction },
+      { path: "blocked", element: <BlockedPage /> },
       { path: "users/:username/posts", element: <MyPosts />, loader: myPostsLoader },
       { path: "posts", element: <AllPosts />, loader: allPostsLoader },
       { path: "users/:username/todos", element: <Todos />, loader: todosLoader },

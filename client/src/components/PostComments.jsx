@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './PostComments.module.css';
 import { useCurrentUser } from '../UserContext';
 import { useToast } from './Toast.jsx';
@@ -28,7 +28,7 @@ function PostComments({ postId, comments, setComments }) {
       });
       if (!res.ok) throw new Error();
       const comment = await res.json();
-      setComments((prev) => [...prev, comment]);
+      setComments((prev) => [...prev, { ...comment, username: currentUser.username, email: currentUser.email }]);
       setNewComment({ title: '', body: '' });
     } catch {
       showToast('Failed to post comment.', 'error');
@@ -57,7 +57,7 @@ function PostComments({ postId, comments, setComments }) {
     if (!body) return;
     try {
       const res = await fetch(`${API}/${id}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: currentUser.id, title: editText.title.trim(), body }),
       });

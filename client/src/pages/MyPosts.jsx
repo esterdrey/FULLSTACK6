@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLoaderData } from 'react-router-dom';
+import { useLoaderData, redirect } from 'react-router-dom';
 import { useCurrentUser } from '../UserContext.js';
 import Post from '../components/Post.jsx';
 import styles from './MyPosts.module.css';
@@ -10,18 +10,21 @@ export const loader = async () => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser"));
     if (!currentUser) return [];
 
-    try {
-        const res = await fetch(
-            `http://localhost:3000/posts?userId=${currentUser.id}&includeComments=true`
-        );
+    const res = await fetch(
+        `http://localhost:3000/posts?userId=${currentUser.id}&includeComments=true`
+    );
 
-        if (!res.ok) throw new Error('Failed to fetch posts');
-
-        return res.json();
-    } catch (error) {
-        console.error(error);
-        throw error;
+    if (res.status === 403) {
+        const data = await res.json().catch(() => ({}));
+        if (data.message === 'Account is blocked') {
+            localStorage.removeItem('currentUser');
+            return redirect('/blocked');
+        }
     }
+
+    if (!res.ok) throw new Error('Failed to fetch posts');
+
+    return res.json();
 };
 
 function MyPosts() {
@@ -94,7 +97,7 @@ function MyPosts() {
     const handleUpdatePost = async (postId, updatedPost) => {
         try {
             const res = await fetch(`http://localhost:3000/posts/${postId}`, {
-                method: 'PATCH',
+                method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     ...updatedPost,

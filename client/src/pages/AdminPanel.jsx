@@ -5,16 +5,15 @@ import { useToast } from "../components/Toast.jsx";
 
 export const loader = async () => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-    if (!currentUser || !currentUser.isAdmin) return redirect("/home");
-    try {
-        const res = await fetch(`http://localhost:3000/users?userId=${currentUser.id}`);
-        if (!res.ok) throw new Error('Failed to fetch users');
-        const users = await res.json();
-        return { users, currentUserId: currentUser.id };
-    } catch (error) {
-        console.error(error);
-        throw error;
-    }
+    if (!currentUser) return redirect("/home");
+
+    const adminCheck = await fetch(`http://localhost:3000/users/check-admin?userId=${currentUser.id}`);
+    if (!adminCheck.ok) return redirect("/home");
+
+    const res = await fetch(`http://localhost:3000/users?userId=${currentUser.id}`);
+    if (!res.ok) throw new Error('Failed to fetch users');
+    const users = await res.json();
+    return { users, currentUserId: currentUser.id };
 };
 
 function AdminPanel() {
@@ -28,7 +27,7 @@ function AdminPanel() {
             const res = await fetch(`http://localhost:3000/users/${user.id}/block`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ blocked: newBlocked }),
+                body: JSON.stringify({ blocked: newBlocked, currentUserId }),
             });
             if (!res.ok) throw new Error();
             setUsers(prev =>

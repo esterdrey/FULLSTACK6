@@ -9,27 +9,22 @@ import { useConfirmDialog } from '../components/ConfirmDialog.jsx';
 const PAGE_SIZE = 10;
 
 export const loader = async () => {
-    try {
-        const res = await fetch(
-            `http://localhost:3000/posts?includeComments=true`
-        );
-
-        if (!res.ok) throw new Error('Failed to fetch posts');
-
-        return res.json();
-    } catch (error) {
-        console.error(error);
-        throw error;
-    }
+    const res = await fetch(
+        `http://localhost:3000/posts?includeComments=true&limit=${PAGE_SIZE}&offset=0`
+    );
+    if (!res.ok) throw new Error('Failed to fetch posts');
+    return res.json();
 };
 
 function AllPosts() {
-    const allPosts = useLoaderData();
+    const initialPosts = useLoaderData();
     const currentUser = useCurrentUser();
-    const [posts, setPosts] = useState(allPosts || []);
-    const [expandedPostId, setExpandedPostId] = useState(null);
+    const [posts, setPosts] = useState(initialPosts || []);
+    const [offset, setOffset] = useState(initialPosts?.length ?? 0);
+    const [hasMore, setHasMore] = useState((initialPosts?.length ?? 0) === PAGE_SIZE);
     const [searchInput, setSearchInput] = useState('');
-    const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+    const [expandedPostId, setExpandedPostId] = useState(null);
+    const [loading, setLoading] = useState(false);
     const { showToast, ToastComponent } = useToast();
     const { confirm, ConfirmDialogComponent } = useConfirmDialog();
 
@@ -42,9 +37,43 @@ function AllPosts() {
         );
     }, [posts, searchInput]);
 
-    const handleSearchChange = (e) => {
-        setSearchInput(e.target.value);
-        setVisibleCount(PAGE_SIZE);
+    const loadMore = async () => {
+        setLoading(true);
+        try {
+            const params = new URLSearchParams({
+                includeComments: 'true',
+                limit: PAGE_SIZE,
+                offset,
+            });
+            const res = await fetch(`http://localhost:3000/posts?${params}`);
+            if (!res.ok) throw new Error();
+            const data = await res.json();
+            setPosts(prev => [...prev, ...data]);
+            setOffset(prev => prev + data.length);
+            setHasMore(data.length === PAGE_SIZE);
+        } catch {
+            showToast('Failed to load more posts.', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleUpdatePost = async (postId, updatedPost) => {
+        try {
+            const res = await fetch(`http://localhost:3000/posts/${postId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...updatedPost, userId: currentUser.id }),
+            });
+            if (!res.ok) throw new Error();
+            const updated = await res.json();
+            setPosts(prev =>
+                prev.map(p => p.id === postId ? { ...p, ...updated, comments: p.comments || [] } : p)
+            );
+            showToast('Post updated.');
+        } catch {
+            showToast('Failed to update post.', 'error');
+        }
     };
 
     const handleDeletePost = async (postId) => {
@@ -64,9 +93,6 @@ function AllPosts() {
         }
     };
 
-    const visible = filtered.slice(0, visibleCount);
-    const hasMore = visibleCount < filtered.length;
-
     return (
         <>
             {ToastComponent}
@@ -76,14 +102,14 @@ function AllPosts() {
                 <input
                     className={styles.searchInput}
                     value={searchInput}
-                    onChange={handleSearchChange}
+                    onChange={e => setSearchInput(e.target.value)}
                     placeholder="Search posts..."
                 />
                 {searchInput && (
                     <button
                         type="button"
                         className={styles.clearBtn}
-                        onClick={() => { setSearchInput(''); setVisibleCount(PAGE_SIZE); }}
+                        onClick={() => setSearchInput('')}
                     >
                         Clear
                     </button>
@@ -91,12 +117,13 @@ function AllPosts() {
             </div>
 
             <div className={styles['posts-container']}>
-                {visible.map(post => (
+                {filtered.map(post => (
                     <Post key={post.id}
                         post={post}
                         isExpanded={expandedPostId === post.id}
                         onToggleExpand={setExpandedPostId}
                         onDelete={handleDeletePost}
+                        onUpdate={handleUpdatePost}
                     />
                 ))}
                 {filtered.length === 0 && (
@@ -104,13 +131,14 @@ function AllPosts() {
                 )}
             </div>
 
-            {hasMore && (
+            {hasMore && !searchInput && (
                 <div className={styles.loadMoreWrap}>
                     <button
                         className={styles.loadMoreBtn}
-                        onClick={() => setVisibleCount(v => v + PAGE_SIZE)}
+                        onClick={loadMore}
+                        disabled={loading}
                     >
-                        Load more ({filtered.length - visibleCount} remaining)
+                        {loading ? 'Loading...' : 'Load more'}
                     </button>
                 </div>
             )}
