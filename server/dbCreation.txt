@@ -1,0 +1,64 @@
+
+CREATE TABLE users (
+    id  INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(100),
+    phone VARCHAR(20),
+    website VARCHAR(100),
+    blocked BOOLEAN DEFAULT FALSE,
+    isAdmin BOOLEAN DEFAULT FALSE,
+    login_attempts INT DEFAULT 0
+);
+
+
+CREATE TABLE user_passwords (
+    userId INT PRIMARY KEY,
+    password VARCHAR(255) NOT NULL,
+    FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE todos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    userId INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    completed BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE -- Added here!
+);
+
+CREATE TABLE posts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    userId INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    body TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE comments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    postId INT NOT NULL,
+    userId INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    body TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (postId) REFERENCES posts(id) ON DELETE CASCADE,
+    FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE albums (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    userId INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE photos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    albumId INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    url VARCHAR(255) NOT NULL,
+    thumbnailUrl VARCHAR(255) NOT NULL,
+    FOREIGN KEY (albumId) REFERENCES albums(id) ON DELETE CASCADE
+);
+
